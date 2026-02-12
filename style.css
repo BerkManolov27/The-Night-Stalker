@@ -1,0 +1,59 @@
+/* Основен стил */
+body {
+    background-color: #0d0d0d;
+    color: #e0e0e0;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    text-align: center;
+}
+
+.ui-panel {
+    margin-bottom: 15px;
+}
+
+h1 {
+    color: #ff4d4d;
+    text-shadow: 2px 2px #000;
+    margin: 0 0 10px 0;
+}
+
+/* Канвас за играта */
+canvas {
+    background-color: #000;
+    border: 4px solid #333;
+    image-rendering: pixelated; /* Прави го да изглежда като пиксел арт */
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* Ефектът за 12+ години */
+.blood-blur {
+    filter: blur(8px) grayscale(50%);
+    transition: filter 0.3s ease;
+}
+
+/* Статистика долу */
+.stats-panel {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    background: #1a1a1a;
+    padding: 10px;
+    border: 1px solid #444;
+}
+
+.stat-box .label {
+    color: #888;
+    font-size: 12px;
+}
+
+.stat-box .value {
+    color: #ff4d4d;
+    font-weight: bold;
+}

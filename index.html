@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Night Stalker - AI Adventure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-container">
+        <header class="ui-panel">
+            <h1>THE NIGHT STALKER</h1>
+            <div class="controls-hint">Движение: СТРЕЛКИ | Цел: Избягвай Ловеца</div>
+            <label class="censor-option">
+                <input type="checkbox" id="censor"> 
+                <span>Режим 12+ (Замъгляване)</span>
+            </label>
+        </header>
+
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+        <footer class="stats-panel">
+            <div class="stat-box">
+                <span class="label">ИНТЕЛЕКТ НА ЛОВЕЦА:</span>
+                <span id="ai-level" class="value">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">ТВОЯТ НАВИК:</span>
+                <span id="player-habit" class="value">Наблюдение...</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
