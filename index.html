@@ -11,11 +11,12 @@
     <div class="game-container">
         <header class="ui-panel">
             <h1>THE NIGHT STALKER</h1>
-            <div class="controls-hint">Движение: СТРЕЛКИ | Цел: Избягвай Ловеца</div>
+            <div class="controls-hint">Движение: СТРЕЛКИ / WASD | Пауза: P | Нов рунд: R</div>
             <label class="censor-option">
                 <input type="checkbox" id="censor"> 
                 <span>Режим 12+ (Замъгляване)</span>
             </label>
+            <div id="game-status" class="game-status">НАТИСНИ СТРЕЛКА ИЛИ WASD, ЗА ДА ЗАПОЧНЕШ</div>
         </header>
 
         <canvas id="gameCanvas" width="600" height="400"></canvas>
@@ -28,6 +29,14 @@
             <div class="stat-box">
                 <span class="label">ТВОЯТ НАВИК:</span>
                 <span id="player-habit" class="value">Наблюдение...</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">ВРЕМЕ ОЦЕЛЯВАНЕ:</span>
+                <span id="survival-time" class="value">0.0s</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">РЕКОРД:</span>
+                <span id="best-time" class="value">0.0s</span>
             </div>
         </footer>
     </div>

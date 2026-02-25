@@ -12,6 +12,7 @@ body {
 
 .game-container {
     text-align: center;
+    width: min(92vw, 760px);
 }
 
 .ui-panel {
@@ -22,6 +23,30 @@ h1 {
     color: #ff4d4d;
     text-shadow: 2px 2px #000;
     margin: 0 0 10px 0;
+}
+
+.controls-hint {
+    color: #b5b5b5;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.censor-option {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+    color: #c7c7c7;
+}
+
+.game-status {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid #4a1f1f;
+    background: rgba(255, 77, 77, 0.08);
+    color: #ff6b6b;
+    font-size: 12px;
+    letter-spacing: 0.8px;
 }
 
 /* Канвас за играта */
@@ -42,15 +67,24 @@ canvas {
 .stats-panel {
     display: flex;
     justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
     margin-top: 15px;
     background: #1a1a1a;
     padding: 10px;
     border: 1px solid #444;
 }
 
+.stat-box {
+    min-width: 150px;
+    flex: 1;
+}
+
 .stat-box .label {
     color: #888;
     font-size: 12px;
+    display: block;
+    margin-bottom: 3px;
 }
 
 .stat-box .value {
