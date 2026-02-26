@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finger Stalker</title>
     <link rel="stylesheet" href="style.css">
-    
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
@@ -14,50 +12,64 @@
 
 <body>
 
+    <!-- MAIN MENU -->
     <div id="mainMenu" class="menu-overlay">
         <div class="menu-card">
-            <h1 class="glitch" data-text="FINGER STALKER">FINGER STALKER</h1>
+            <h1>FINGER STALKER</h1>
             <p class="menu-instructions">Evade the stalker. Collect the coins.</p>
             <p class="menu-subtext"><em>Control the player with your index finger via webcam</em></p>
             
             <div class="menu-section">
-                <label for="playerColorPicker">Select Player Color</label>
-                <div class="color-picker-wrapper">
-                    <input type="color" id="playerColorPicker" value="#00ffff">
-                </div>
+                <label>Select Player Color</label>
+                <input type="color" id="playerColorPicker" value="#00ffff">
             </div>
             
+            <button id="skinsBtn" class="neon-btn">SELECT SKIN</button>
+            <br><br>
             <button id="playBtn" class="neon-btn">INITIALIZE GAME</button>
         </div>
     </div>
 
+    <!-- SKINS MENU -->
+    <div id="skinsMenu" class="menu-overlay" style="display:none;">
+        <div class="menu-card">
+            <h1>SELECT SKIN</h1>
+
+            <div class="menu-section">
+                <button class="neon-btn skin-option" data-skin="square">SQUARE</button>
+                <button class="neon-btn skin-option" data-skin="circle">CIRCLE</button>
+                <button class="neon-btn skin-option" data-skin="triangle">TRIANGLE</button>
+            </div>
+
+            <button id="backToMenuBtn" class="neon-btn">BACK</button>
+        </div>
+    </div>
+
+    <!-- GAME -->
     <div class="game-container" id="gameContainer">
         <div class="top-ui">
             <div class="ui-badge status-badge">
-                <span class="label">STATUS:</span> <span id="statusText" class="value running">RUNNING</span>
+                <span class="label">STATUS:</span>
+                <span id="statusText" class="value running">RUNNING</span>
             </div>
             <div class="ui-badge">
-                <span class="icon">🪙</span> <span id="coinCount" class="value">0</span>
+                🪙 <span id="coinCount" class="value">0</span>
             </div>
             <div class="ui-badge">
-                <span class="label">LEVEL</span> <span id="levelNumber" class="value">1</span><span class="max-level">/5</span>
+                LEVEL <span id="levelNumber" class="value">1</span>/5
             </div>
-            <div class="ui-badge health-badge">
-                <span class="label">HP:</span>
-                <div id="heartsContainer">
-                    <span class="heart">❤️</span>
-                    <span class="heart">❤️</span>
-                    <span class="heart">❤️</span>
-                </div>
+            <div class="ui-badge">
+                HP:
+                <div id="heartsContainer">❤️❤️❤️</div>
             </div>
         </div>
-        
-        <div class="controls-hint">Press <strong>F</strong> to Pause | <strong>R</strong> to Restart</div>
+
+        <div class="controls-hint">Press F to Pause | R to Restart</div>
 
         <div class="canvas-wrapper">
             <canvas id="gameCanvas" width="800" height="500"></canvas>
         </div>
-        
+
         <video id="video" style="display:none;" playsinline></video>
     </div>
 
