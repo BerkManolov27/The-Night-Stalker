@@ -1,44 +1,64 @@
 <!DOCTYPE html>
-<html lang="bg">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Night Stalker - AI Adventure</title>
+    <title>Finger Stalker</title>
     <link rel="stylesheet" href="style.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 </head>
+
 <body>
 
-    <div class="game-container">
-        <header class="ui-panel">
-            <h1>THE NIGHT STALKER</h1>
-            <div class="controls-hint">Движение: СТРЕЛКИ / WASD | Пауза: P | Нов рунд: R</div>
-            <label class="censor-option">
-                <input type="checkbox" id="censor"> 
-                <span>Режим 12+ (Замъгляване)</span>
-            </label>
-            <div id="game-status" class="game-status">НАТИСНИ СТРЕЛКА ИЛИ WASD, ЗА ДА ЗАПОЧНЕШ</div>
-        </header>
+    <div id="mainMenu" class="menu-overlay">
+        <div class="menu-card">
+            <h1 class="glitch" data-text="FINGER STALKER">FINGER STALKER</h1>
+            <p class="menu-instructions">Evade the stalker. Collect the coins.</p>
+            <p class="menu-subtext"><em>Control the player with your index finger via webcam</em></p>
+            
+            <div class="menu-section">
+                <label for="playerColorPicker">Select Player Color</label>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="playerColorPicker" value="#00ffff">
+                </div>
+            </div>
+            
+            <button id="playBtn" class="neon-btn">INITIALIZE GAME</button>
+        </div>
+    </div>
 
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div class="game-container" id="gameContainer">
+        <div class="top-ui">
+            <div class="ui-badge status-badge">
+                <span class="label">STATUS:</span> <span id="statusText" class="value running">RUNNING</span>
+            </div>
+            <div class="ui-badge">
+                <span class="icon">🪙</span> <span id="coinCount" class="value">0</span>
+            </div>
+            <div class="ui-badge">
+                <span class="label">LEVEL</span> <span id="levelNumber" class="value">1</span><span class="max-level">/5</span>
+            </div>
+            <div class="ui-badge health-badge">
+                <span class="label">HP:</span>
+                <div id="heartsContainer">
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls-hint">Press <strong>F</strong> to Pause | <strong>R</strong> to Restart</div>
 
-        <footer class="stats-panel">
-            <div class="stat-box">
-                <span class="label">ИНТЕЛЕКТ НА ЛОВЕЦА:</span>
-                <span id="ai-level" class="value">0</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">ТВОЯТ НАВИК:</span>
-                <span id="player-habit" class="value">Наблюдение...</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">ВРЕМЕ ОЦЕЛЯВАНЕ:</span>
-                <span id="survival-time" class="value">0.0s</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">РЕКОРД:</span>
-                <span id="best-time" class="value">0.0s</span>
-            </div>
-        </footer>
+        <div class="canvas-wrapper">
+            <canvas id="gameCanvas" width="800" height="500"></canvas>
+        </div>
+        
+        <video id="video" style="display:none;" playsinline></video>
     </div>
 
     <script src="script.js"></script>

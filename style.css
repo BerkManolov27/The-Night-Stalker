@@ -1,93 +1,188 @@
-/* Основен стил */
+:root {
+    --bg-dark: #090a0f;
+    --neon-cyan: #00ffff;
+    --neon-red: #ff3366;
+    --neon-gold: #ffcc00;
+    --panel-bg: rgba(20, 25, 35, 0.7);
+    --font-main: 'Orbitron', sans-serif;
+}
+
 body {
-    background-color: #0d0d0d;
-    color: #e0e0e0;
-    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    background: radial-gradient(circle at center, #1b1e2b 0%, var(--bg-dark) 100%);
+    color: #eee;
+    font-family: var(--font-main);
+    text-align: center;
+    overflow: hidden;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
 }
 
-.game-container {
-    text-align: center;
-    width: min(92vw, 760px);
-}
-
-.ui-panel {
-    margin-bottom: 15px;
-}
-
-h1 {
-    color: #ff4d4d;
-    text-shadow: 2px 2px #000;
-    margin: 0 0 10px 0;
-}
-
-.controls-hint {
-    color: #b5b5b5;
-    font-size: 13px;
-    margin-bottom: 8px;
-}
-
-.censor-option {
-    display: inline-flex;
-    gap: 8px;
+/* ================= MAIN MENU ================= */
+.menu-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex;
+    justify-content: center;
     align-items: center;
-    font-size: 13px;
-    color: #c7c7c7;
+    z-index: 100;
 }
 
-.game-status {
-    margin-top: 10px;
-    padding: 8px 10px;
-    border: 1px solid #4a1f1f;
-    background: rgba(255, 77, 77, 0.08);
-    color: #ff6b6b;
-    font-size: 12px;
-    letter-spacing: 0.8px;
+.menu-card {
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    padding: 50px 60px;
+    border-radius: 20px;
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.1), inset 0 0 20px rgba(0, 255, 255, 0.05);
+    text-align: center;
 }
 
-/* Канвас за играта */
-canvas {
-    background-color: #000;
-    border: 4px solid #333;
-    image-rendering: pixelated; /* Прави го да изглежда като пиксел арт */
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+.menu-card h1 {
+    font-size: 54px;
+    margin: 0 0 10px 0;
+    color: var(--neon-red);
+    text-shadow: 0 0 10px var(--neon-red), 0 0 20px var(--neon-red);
+    letter-spacing: 2px;
 }
 
-/* Ефектът за 12+ години */
-.blood-blur {
-    filter: blur(8px) grayscale(50%);
-    transition: filter 0.3s ease;
+.menu-instructions {
+    font-size: 18px;
+    color: var(--neon-cyan);
+    margin: 0 0 5px 0;
+    font-weight: 700;
 }
 
-/* Статистика долу */
-.stats-panel {
+.menu-subtext {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 30px;
+    font-family: 'Arial', sans-serif;
+}
+
+.menu-section {
+    margin: 30px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.menu-section label {
+    font-size: 16px;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: transparent;
+}
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch {
+    border: 3px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(255,255,255,0.5);
+}
+
+.neon-btn {
+    padding: 18px 40px;
+    font-size: 20px;
+    font-family: var(--font-main);
+    font-weight: 700;
+    background: transparent;
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+.neon-btn:hover {
+    background: var(--neon-cyan);
+    color: #000;
+    box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 20px var(--neon-cyan);
+    transform: translateY(-2px);
+}
+
+/* ================= GAME UI ================= */
+.game-container {
+    display: none;
+    width: 100%;
+    max-width: 900px;
+    position: relative;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.top-ui {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 0 20px;
+}
+
+.ui-badge {
+    background: var(--panel-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 15px;
-    background: #1a1a1a;
-    padding: 10px;
-    border: 1px solid #444;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
-.stat-box {
-    min-width: 150px;
-    flex: 1;
-}
+.ui-badge .label { color: #888; font-size: 14px; }
+.ui-badge .value { font-size: 22px; font-weight: 700; color: #fff; }
+.ui-badge .max-level { color: #555; font-size: 16px; }
 
-.stat-box .label {
-    color: #888;
+.status-badge .value.running { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
+.status-badge .value.paused { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
+
+#coinCount { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
+
+.health-badge { border-color: rgba(255, 51, 102, 0.3); }
+#heartsContainer { font-size: 20px; display: flex; gap: 5px; }
+
+.controls-hint {
     font-size: 12px;
-    display: block;
-    margin-bottom: 3px;
+    color: #666;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+.controls-hint strong { color: var(--neon-cyan); }
+
+/* ================= CANVAS ================= */
+.canvas-wrapper {
+    position: relative;
+    display: inline-block;
+    padding: 5px;
+    background: linear-gradient(45deg, var(--neon-cyan), var(--neon-red));
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
 }
 
-.stat-box .value {
-    color: #ff4d4d;
-    font-weight: bold;
+canvas {
+    display: block;
+    background-color: #0d1117;
+    background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    border-radius: 12px;
 }

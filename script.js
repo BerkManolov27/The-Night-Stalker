@@ -1,146 +1,146 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const aiLevelEl = document.getElementById('ai-level');
-const habitEl = document.getElementById('player-habit');
-const censorCheckbox = document.getElementById('censor');
-const statusEl = document.getElementById('game-status');
-const survivalTimeEl = document.getElementById('survival-time');
-const bestTimeEl = document.getElementById('best-time');
+const mainMenu = document.getElementById("mainMenu");
+const playBtn = document.getElementById("playBtn");
+const gameContainer = document.getElementById("gameContainer");
+const statusText = document.getElementById("statusText");
+const playerColorPicker = document.getElementById("playerColorPicker");
+const coinCountEl = document.getElementById("coinCount");
+const levelNumberEl = document.getElementById("levelNumber");
+const heartsContainer = document.getElementById("heartsContainer");
 
-// Настройки на играта
-const playerStart = { x: 50, y: 50 };
-const stalkerStart = { x: 500, y: 300 };
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const videoElement = document.getElementById("video");
 
-let player = { x: playerStart.x, y: playerStart.y, size: 20, speed: 4, color: '#3498db' };
-let stalker = { x: stalkerStart.x, y: stalkerStart.y, size: 25, speed: 1, color: '#e74c3c' };
-let keys = {};
-let gameState = 'waiting';
-let gameStartedAt = 0;
-let surviveTime = 0;
-let bestTime = 0;
-let lastTime = 0;
-let pulse = 0;
+let gameRunning = false;
 
-// AI Данни: Броим времето прекарано в 4-те края на екрана
-let memory = { 
-    top_left: 0, 
-    top_right: 0, 
-    bottom_left: 0, 
-    bottom_right: 0 
-};
+/* ================= PLAYER & STALKER ================= */
+let player = { x: 400, y: 250, size: 15, color: "#00ffff" };
+let playerTarget = { x: 400, y: 250 }; // Matches the 800x500 canvas center
 
-function isMovementKey(code) {
-    return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(code);
-}
+let stalker = { x: 50, y: 50, size: 25, speed: 1.2 };
 
-window.addEventListener('keydown', e => {
-    if (isMovementKey(e.code)) {
-        keys[e.code] = true;
-        if (gameState === 'waiting') startGame();
-    }
+let coins = [];
+let collectedCoins = 0;
+let coinsNeeded = 5;
 
-    if (e.code === 'KeyP' && gameState !== 'waiting') {
-        gameState = gameState === 'paused' ? 'running' : 'paused';
-        statusEl.innerText = gameState === 'paused' ? 'ПАУЗА' : 'БЯГАЙ!';
-    }
+let level = 1;
+const maxLevels = 5;
 
-    if (e.code === 'KeyR') {
-        resetRound(true);
-        gameState = 'running';
-        gameStartedAt = performance.now();
-        statusEl.innerText = 'НОВ РУНД';
+let hearts = 3;
+let isInvincible = false; // Invincibility logic
+
+/* ================= MAIN MENU ================= */
+playBtn.addEventListener("click", () => {
+    player.color = playerColorPicker.value;
+    mainMenu.style.display = "none";
+    gameContainer.style.display = "block";
+    startLevel();
+    gameRunning = true;
+});
+
+/* ================= MEDIA PIPE HANDS ================= */
+const hands = new Hands({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+});
+
+hands.setOptions({
+    maxNumHands: 1,
+    modelComplexity: 0,
+    minDetectionConfidence: 0.6,
+    minTrackingConfidence: 0.6
+});
+
+hands.onResults(results => {
+    if (!gameRunning) return;
+
+    if (results.multiHandLandmarks.length > 0) {
+        const indexFinger = results.multiHandLandmarks[0][8];
+        // Mirror fix relative to canvas size
+        playerTarget.x = (1 - indexFinger.x) * canvas.width;
+        playerTarget.y = indexFinger.y * canvas.height;
     }
 });
 
-window.addEventListener('keyup', e => {
-    keys[e.code] = false;
+const camera = new Camera(videoElement, {
+    onFrame: async () => await hands.send({ image: videoElement }),
+    width: 480,
+    height: 360
+});
+camera.start();
+
+/* ================= KEY CONTROLS ================= */
+window.addEventListener("keydown", e => {
+    if (e.code === "KeyF") {
+        gameRunning = !gameRunning;
+        statusText.innerText = gameRunning ? "RUNNING" : "PAUSED";
+        statusText.className = "value " + (gameRunning ? "running" : "paused");
+    }
+    if (e.code === "KeyR") restartGame();
 });
 
-function startGame() {
-    gameState = 'running';
-    gameStartedAt = performance.now();
-    statusEl.innerText = 'БЯГАЙ!';
+/* ================= LEVEL / GAME LOGIC ================= */
+function startLevel() {
+    collectedCoins = 0;
+    coinsNeeded = 4 + level;
+
+    player.x = canvas.width / 2;
+    player.y = canvas.height / 2;
+    playerTarget.x = player.x;
+    playerTarget.y = player.y;
+
+    stalker.x = 50; 
+    stalker.y = 50; 
+    stalker.size = 25 + level * 5; 
+    stalker.speed = 1 + level * 0.5;
+
+    isInvincible = false;
+    player.color = playerColorPicker.value; // Reset color in case it was flashing white
+
+    levelNumberEl.innerText = level;
+    coinCountEl.innerText = collectedCoins;
+
+    statusText.innerText = "RUNNING";
+    statusText.className = "value running";
+
+    spawnCoins();
 }
 
-function update() {
-    if (gameState !== 'running') return;
-
-    // 1. Движение на играча
-    movePlayer();
-
-    // 2. AI ОБУЧЕНИЕ (Reinforcement Learning Logic)
-    trackHabits();
-
-    // 3. ПОВЕДЕНИЕ НА ЛОВЕЦА
-    moveStalker();
-
-    // 4. ПРОВЕРКА ЗА ЗАГУБА
-    checkCollision();
+function restartGame() {
+    level = 1;
+    hearts = 3;
+    updateHearts();
+    startLevel();
+    gameRunning = true;
 }
 
-function movePlayer() {
-    let moveX = 0;
-    let moveY = 0;
-
-    if (keys['ArrowUp'] || keys['KeyW']) moveY -= 1;
-    if (keys['ArrowDown'] || keys['KeyS']) moveY += 1;
-    if (keys['ArrowLeft'] || keys['KeyA']) moveX -= 1;
-    if (keys['ArrowRight'] || keys['KeyD']) moveX += 1;
-
-    if (moveX !== 0 || moveY !== 0) {
-        const norm = Math.hypot(moveX, moveY);
-        player.x += (moveX / norm) * player.speed;
-        player.y += (moveY / norm) * player.speed;
+function spawnCoins() {
+    coins = [];
+    for (let i = 0; i < coinsNeeded; i++) {
+        coins.push({
+            x: 15 + Math.random() * (canvas.width - 30),
+            y: 15 + Math.random() * (canvas.height - 30),
+            size: 15
+        });
     }
-
-    player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
-    player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
 }
 
-function trackHabits() {
-    // В реално време AI разбира къде обичаш да ходиш
-    if (player.x < 300 && player.y < 200) memory.top_left++;
-    else if (player.x >= 300 && player.y < 200) memory.top_right++;
-    else if (player.x < 300 && player.y >= 200) memory.bottom_left++;
-    else memory.bottom_right++;
-
-    // Намиране на най-използваната зона
-    let favorite = Object.keys(memory).reduce((a, b) => memory[a] > memory[b] ? a : b);
-    habitEl.innerText = favorite.replace('_', ' ').toUpperCase();
-}
-
-function getFavoriteZoneCenter() {
-    const favorite = Object.keys(memory).reduce((a, b) => memory[a] > memory[b] ? a : b);
-    const centers = {
-        top_left: { x: 150, y: 100 },
-        top_right: { x: 450, y: 100 },
-        bottom_left: { x: 150, y: 300 },
-        bottom_right: { x: 450, y: 300 }
-    };
-    return centers[favorite];
-}
-
+/* ================= STALKER ================= */
 function moveStalker() {
-    // Колкото повече "данни" има за теб, толкова по-бърз става той
-    let totalExperience = Object.values(memory).reduce((a, b) => a + b, 0);
-    stalker.speed = Math.min(5.5, 1 + (totalExperience / 1800));
-    aiLevelEl.innerText = stalker.speed.toFixed(2);
+    if (!gameRunning) return;
 
-    const favoriteZone = getFavoriteZoneCenter();
-    const chaseWeight = Math.min(0.9, totalExperience / 2200);
-    const targetX = player.x * (1 - chaseWeight) + favoriteZone.x * chaseWeight;
-    const targetY = player.y * (1 - chaseWeight) + favoriteZone.y * chaseWeight;
+    let dx = player.x - stalker.x;
+    let dy = player.y - stalker.y;
+    let distance = Math.hypot(dx, dy);
 
-    // Логика за преследване
-    if (stalker.x < targetX) stalker.x += stalker.speed;
-    else stalker.x -= stalker.speed;
-
-    if (stalker.y < targetY) stalker.y += stalker.speed;
-    else stalker.y -= stalker.speed;
+    if (distance > 0) {
+        stalker.x += (dx / distance) * stalker.speed;
+        stalker.y += (dy / distance) * stalker.speed;
+    }
 }
 
+/* ================= COLLISIONS ================= */
 function checkCollision() {
-    if (gameState !== 'running') return;
+    if (!gameRunning || isInvincible) return;
 
     let hit = player.x < stalker.x + stalker.size &&
               player.x + player.size > stalker.x &&
@@ -148,85 +148,106 @@ function checkCollision() {
               player.y + player.size > stalker.y;
 
     if (hit) {
-        gameState = 'gameover';
-        statusEl.innerText = 'ХВАНАТ СИ! НАТИСНИ R';
+        hearts--;
+        updateHearts();
 
-        bestTime = Math.max(bestTime, surviveTime);
-        bestTimeEl.innerText = `${bestTime.toFixed(1)}s`;
+        if (hearts <= 0) {
+            gameRunning = false;
+            statusText.innerText = "GAME OVER";
+            statusText.className = "value paused";
+        } else {
+            // Trigger invincibility frames
+            isInvincible = true;
+            let originalColor = player.color;
+            player.color = "#ffffff";
 
-        if (censorCheckbox.checked) {
-            canvas.classList.add('blood-blur');
+            setTimeout(() => {
+                isInvincible = false;
+                // Only restore color if we haven't restarted the game
+                if (player.color === "#ffffff") player.color = originalColor;
+            }, 1500);
         }
-
-        setTimeout(() => {
-            alert("Ловецът те настигна! Той вече познава стила ти на игра.");
-            resetRound(false);
-        }, 100);
     }
 }
 
-function resetRound(clearLearning) {
-    player.x = playerStart.x;
-    player.y = playerStart.y;
-    stalker.x = stalkerStart.x;
-    stalker.y = stalkerStart.y;
+/* ================= COINS ================= */
+function checkCoins() {
+    if (!gameRunning) return;
 
-    surviveTime = 0;
-    survivalTimeEl.innerText = '0.0s';
+    coins = coins.filter(c => {
+        let hit = player.x < c.x + c.size &&
+                  player.x + player.size > c.x &&
+                  player.y < c.y + c.size &&
+                  player.y + player.size > c.y;
 
-    if (clearLearning) {
-        memory = {
-            top_left: 0,
-            top_right: 0,
-            bottom_left: 0,
-            bottom_right: 0
-        };
-        habitEl.innerText = 'Наблюдение...';
-        aiLevelEl.innerText = '0.00';
+        if (hit) {
+            collectedCoins++;
+            coinCountEl.innerText = collectedCoins;
+            return false;
+        }
+        return true;
+    });
+
+    if (collectedCoins >= coinsNeeded) {
+        level++;
+        if (level > maxLevels) {
+            statusText.innerText = "YOU WIN! (Press R)";
+            statusText.className = "value running";
+            gameRunning = false;
+        } else {
+            startLevel();
+        }
     }
-
-    canvas.classList.remove('blood-blur');
 }
 
-function updateTimer(now) {
-    if (gameState === 'running') {
-        surviveTime = (now - gameStartedAt) / 1000;
-        survivalTimeEl.innerText = `${surviveTime.toFixed(1)}s`;
+function updateHearts() {
+    heartsContainer.innerHTML = "";
+    for (let i = 0; i < hearts; i++) {
+        heartsContainer.innerHTML += `<span class="heart">❤️</span>`;
     }
 }
 
-function drawBackground() {
-    pulse += 0.03;
-    const vignette = 18 + Math.sin(pulse) * 6;
-    ctx.fillStyle = '#060606';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = `rgba(255, 0, 0, ${0.06 + (vignette / 400)})`;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
-}
-
-function draw(now = 0) {
+/* ================= DRAW LOOP ================= */
+function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBackground();
 
-    // Нарисувай играча
+    // Smooth player movement via pure Lerp
+    const lerpFactor = 0.15; 
+
+    player.x += (playerTarget.x - player.x) * lerpFactor;
+    player.y += (playerTarget.y - player.y) * lerpFactor;
+
+    // Boundaries check
+    player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
+    player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
+
+    // Draw player
     ctx.fillStyle = player.color;
+    // Rapid blink effect if invincible
+    if (isInvincible && Math.floor(Date.now() / 100) % 2 === 0) {
+        ctx.fillStyle = "transparent"; 
+    }
     ctx.fillRect(player.x, player.y, player.size, player.size);
 
-    // Нарисувай Ловеца с малко сияние
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "red";
-    ctx.fillStyle = stalker.color;
+    // Draw stalker
+    ctx.fillStyle = "#ff3366"; 
     ctx.fillRect(stalker.x, stalker.y, stalker.size, stalker.size);
-    ctx.shadowBlur = 0;
 
-    updateTimer(now);
-    update();
+    // Draw coins
+    coins.forEach(c => {
+        ctx.fillStyle = "#ffcc00"; 
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.size / 2, 0, Math.PI*2);
+        ctx.fill();
+    });
+
+    moveStalker();
+    checkCollision();
+    checkCoins();
+
     requestAnimationFrame(draw);
 }
 
-// Старт на играта
-bestTimeEl.innerText = '0.0s';
-survivalTimeEl.innerText = '0.0s';
+// Start drawing immediately
 draw();
+updateHearts(); // Ensure hearts are rendered initially
