@@ -12,7 +12,7 @@ const ctx = canvas.getContext("2d");
 const videoElement = document.getElementById("video");
 
 let gameRunning = false;
-let waitingForStartMove = false; // Нова променлива за началото
+let waitingForStartMove = false; 
 
 /* ================= PLAYER & STALKER ================= */
 let player = { x: 400, y: 250, size: 15, color: "#00ffff" };
@@ -37,11 +37,10 @@ function initializeGame() {
         mainMenu.style.display = "none";
         gameContainer.style.display = "block";
         
-        // Вместо веднага да стартираме, чакаме движение
         startLevel();
         gameRunning = false; 
         waitingForStartMove = true; 
-        statusText.innerText = "MOVE FINGER TO CIRCLE";
+        statusText.innerText = "READY"; // Cleaned status
     }
 }
 
@@ -60,19 +59,17 @@ hands.setOptions({
 });
 
 hands.onResults(results => {
-    // Движим целевата точка на играча дори и играта да не е "тръгнала" още
     if (results.multiHandLandmarks.length > 0) {
         const indexFinger = results.multiHandLandmarks[0][8];
         playerTarget.x = (1 - indexFinger.x) * canvas.width;
         playerTarget.y = indexFinger.y * canvas.height;
 
-        // ПРОВЕРКА: Ако чакаме за старт, виж дали пръста е в центъра
         if (waitingForStartMove) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const dist = Math.hypot(playerTarget.x - centerX, playerTarget.y - centerY);
             
-            if (dist < 40) { // Ако е в рамките на 40 пиксела от центъра
+            if (dist < 40) { 
                 waitingForStartMove = false;
                 gameRunning = true;
                 statusText.innerText = "RUNNING";
@@ -93,11 +90,20 @@ window.addEventListener("keydown", e => {
     if (e.code === "KeyS") {
         initializeGame();
     }
+    
     if (e.code === "KeyF") {
-        gameRunning = !gameRunning;
+        if (waitingForStartMove) {
+            waitingForStartMove = false;
+            gameRunning = true;
+        } else {
+            gameRunning = !gameRunning;
+        }
         statusText.innerText = gameRunning ? "RUNNING" : "PAUSED";
     }
-    if (e.code === "KeyR") restartGame();
+    
+    if (e.code === "KeyR") {
+        restartGame();
+    }
 });
 
 /* ================= LEVEL / GAME LOGIC ================= */
@@ -130,8 +136,8 @@ function restartGame() {
     updateHearts();
     startLevel();
     gameRunning = false;
-    waitingForStartMove = true; // При рестарт също чакаме за движение
-    statusText.innerText = "MOVE FINGER TO CIRCLE";
+    waitingForStartMove = true; 
+    statusText.innerText = "READY"; // Instruction removed from status
 }
 
 function spawnCoins() {
@@ -175,7 +181,6 @@ function checkCollision() {
         if (hearts <= 0) {
             gameRunning = false;
             statusText.innerText = "GAME OVER";
-            statusText.className = "value paused";
         } else {
             isInvincible = true;
             let originalColor = player.color;
@@ -210,14 +215,13 @@ function checkCoins() {
     if (collectedCoins >= coinsNeeded) {
         level++;
         if (level > maxLevels) {
-            statusText.innerText = "YOU WIN! (Press R)";
-            statusText.className = "value running";
+            statusText.innerText = "YOU WIN!";
             gameRunning = false;
         } else {
             startLevel();
-            // Всяко ново ниво започва с изчакване в центъра
             gameRunning = false;
             waitingForStartMove = true;
+            statusText.innerText = "LEVEL UP"; // Clean status
         }
     }
 }
@@ -240,7 +244,7 @@ function draw() {
     player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
     player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
 
-    // АКО ЧКАМЕ ЗА СТАРТ - РИСУВАЙ КРЪГА
+    // CIRCLE DRAWING (Kept on Canvas)
     if (waitingForStartMove) {
         ctx.strokeStyle = player.color;
         ctx.lineWidth = 3;
@@ -249,23 +253,23 @@ function draw() {
         ctx.stroke();
         
         ctx.fillStyle = "white";
-        ctx.font = "16px Orbitron";
+        ctx.font = "bold 18px Orbitron";
         ctx.textAlign = "center";
-        ctx.fillText("PLACE FINGER HERE TO START", canvas.width / 2, canvas.height / 2 + 70);
+        ctx.fillText("PLACE FINGER HERE TO START", canvas.width / 2, canvas.height / 2 + 80);
     }
 
-    // РИСУВАНЕ НА ИГРАЧА
+    // DRAW PLAYER
     ctx.fillStyle = player.color;
     if (isInvincible && Math.floor(Date.now() / 100) % 2 === 0) {
-        ctx.fillStyle = "transparent"; 
+        ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; 
     }
     ctx.fillRect(player.x, player.y, player.size, player.size);
 
-    // РИСУВАНЕ НА СТАЛКЕРА
+    // DRAW STALKER
     ctx.fillStyle = "#ff3366"; 
     ctx.fillRect(stalker.x, stalker.y, stalker.size, stalker.size);
 
-    // РИСУВАНЕ НА МОНЕТИТЕ
+    // DRAW COINS
     coins.forEach(c => {
         ctx.fillStyle = "#ffcc00"; 
         ctx.beginPath();
