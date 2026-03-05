@@ -9,13 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 </head>
-
 <body>
 
-    <!-- MAIN MENU -->
     <div id="mainMenu" class="menu-overlay">
         <div class="menu-card">
-            <h1>FINGER STALKER</h1>
+            <h1 class="sharp-title">FINGER STALKER</h1>
             <p class="menu-instructions">Evade the stalker. Collect the coins.</p>
             <p class="menu-subtext"><em>Control the player with your index finger via webcam</em></p>
             
@@ -24,28 +22,10 @@
                 <input type="color" id="playerColorPicker" value="#00ffff">
             </div>
             
-            <button id="skinsBtn" class="neon-btn">SELECT SKIN</button>
-            <br><br>
-            <button id="playBtn" class="neon-btn">INITIALIZE GAME</button>
+            <button id="playBtn" class="neon-btn">INITIALIZE GAME (Press S)</button>
         </div>
     </div>
 
-    <!-- SKINS MENU -->
-    <div id="skinsMenu" class="menu-overlay" style="display:none;">
-        <div class="menu-card">
-            <h1>SELECT SKIN</h1>
-
-            <div class="menu-section">
-                <button class="neon-btn skin-option" data-skin="square">SQUARE</button>
-                <button class="neon-btn skin-option" data-skin="circle">CIRCLE</button>
-                <button class="neon-btn skin-option" data-skin="triangle">TRIANGLE</button>
-            </div>
-
-            <button id="backToMenuBtn" class="neon-btn">BACK</button>
-        </div>
-    </div>
-
-    <!-- GAME -->
     <div class="game-container" id="gameContainer">
         <div class="top-ui">
             <div class="ui-badge status-badge">
@@ -59,8 +39,7 @@
                 LEVEL <span id="levelNumber" class="value">1</span>/5
             </div>
             <div class="ui-badge">
-                HP:
-                <div id="heartsContainer">❤️❤️❤️</div>
+                HP: <div id="heartsContainer">❤️❤️❤️</div>
             </div>
         </div>
 

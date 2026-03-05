@@ -12,10 +12,11 @@ const ctx = canvas.getContext("2d");
 const videoElement = document.getElementById("video");
 
 let gameRunning = false;
+let waitingForStartMove = false; // Нова променлива за началото
 
 /* ================= PLAYER & STALKER ================= */
 let player = { x: 400, y: 250, size: 15, color: "#00ffff" };
-let playerTarget = { x: 400, y: 250 }; // Matches the 800x500 canvas center
+let playerTarget = { x: 400, y: 250 }; 
 
 let stalker = { x: 50, y: 50, size: 25, speed: 1.2 };
 
@@ -27,16 +28,24 @@ let level = 1;
 const maxLevels = 5;
 
 let hearts = 3;
-let isInvincible = false; // Invincibility logic
+let isInvincible = false; 
 
-/* ================= MAIN MENU ================= */
-playBtn.addEventListener("click", () => {
-    player.color = playerColorPicker.value;
-    mainMenu.style.display = "none";
-    gameContainer.style.display = "block";
-    startLevel();
-    gameRunning = true;
-});
+/* ================= MAIN MENU & START LOGIC ================= */
+function initializeGame() {
+    if (!gameRunning && mainMenu.style.display !== "none") {
+        player.color = playerColorPicker.value;
+        mainMenu.style.display = "none";
+        gameContainer.style.display = "block";
+        
+        // Вместо веднага да стартираме, чакаме движение
+        startLevel();
+        gameRunning = false; 
+        waitingForStartMove = true; 
+        statusText.innerText = "MOVE FINGER TO CIRCLE";
+    }
+}
+
+playBtn.addEventListener("click", initializeGame);
 
 /* ================= MEDIA PIPE HANDS ================= */
 const hands = new Hands({
@@ -51,13 +60,24 @@ hands.setOptions({
 });
 
 hands.onResults(results => {
-    if (!gameRunning) return;
-
+    // Движим целевата точка на играча дори и играта да не е "тръгнала" още
     if (results.multiHandLandmarks.length > 0) {
         const indexFinger = results.multiHandLandmarks[0][8];
-        // Mirror fix relative to canvas size
         playerTarget.x = (1 - indexFinger.x) * canvas.width;
         playerTarget.y = indexFinger.y * canvas.height;
+
+        // ПРОВЕРКА: Ако чакаме за старт, виж дали пръста е в центъра
+        if (waitingForStartMove) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const dist = Math.hypot(playerTarget.x - centerX, playerTarget.y - centerY);
+            
+            if (dist < 40) { // Ако е в рамките на 40 пиксела от центъра
+                waitingForStartMove = false;
+                gameRunning = true;
+                statusText.innerText = "RUNNING";
+            }
+        }
     }
 });
 
@@ -70,10 +90,12 @@ camera.start();
 
 /* ================= KEY CONTROLS ================= */
 window.addEventListener("keydown", e => {
+    if (e.code === "KeyS") {
+        initializeGame();
+    }
     if (e.code === "KeyF") {
         gameRunning = !gameRunning;
         statusText.innerText = gameRunning ? "RUNNING" : "PAUSED";
-        statusText.className = "value " + (gameRunning ? "running" : "paused");
     }
     if (e.code === "KeyR") restartGame();
 });
@@ -94,13 +116,10 @@ function startLevel() {
     stalker.speed = 1 + level * 0.5;
 
     isInvincible = false;
-    player.color = playerColorPicker.value; // Reset color in case it was flashing white
+    player.color = playerColorPicker.value; 
 
     levelNumberEl.innerText = level;
     coinCountEl.innerText = collectedCoins;
-
-    statusText.innerText = "RUNNING";
-    statusText.className = "value running";
 
     spawnCoins();
 }
@@ -110,7 +129,9 @@ function restartGame() {
     hearts = 3;
     updateHearts();
     startLevel();
-    gameRunning = true;
+    gameRunning = false;
+    waitingForStartMove = true; // При рестарт също чакаме за движение
+    statusText.innerText = "MOVE FINGER TO CIRCLE";
 }
 
 function spawnCoins() {
@@ -156,14 +177,12 @@ function checkCollision() {
             statusText.innerText = "GAME OVER";
             statusText.className = "value paused";
         } else {
-            // Trigger invincibility frames
             isInvincible = true;
             let originalColor = player.color;
             player.color = "#ffffff";
 
             setTimeout(() => {
                 isInvincible = false;
-                // Only restore color if we haven't restarted the game
                 if (player.color === "#ffffff") player.color = originalColor;
             }, 1500);
         }
@@ -196,6 +215,9 @@ function checkCoins() {
             gameRunning = false;
         } else {
             startLevel();
+            // Всяко ново ниво започва с изчакване в центъра
+            gameRunning = false;
+            waitingForStartMove = true;
         }
     }
 }
@@ -211,29 +233,39 @@ function updateHearts() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Smooth player movement via pure Lerp
     const lerpFactor = 0.15; 
-
     player.x += (playerTarget.x - player.x) * lerpFactor;
     player.y += (playerTarget.y - player.y) * lerpFactor;
 
-    // Boundaries check
     player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
     player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
 
-    // Draw player
+    // АКО ЧКАМЕ ЗА СТАРТ - РИСУВАЙ КРЪГА
+    if (waitingForStartMove) {
+        ctx.strokeStyle = player.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, 40, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.fillStyle = "white";
+        ctx.font = "16px Orbitron";
+        ctx.textAlign = "center";
+        ctx.fillText("PLACE FINGER HERE TO START", canvas.width / 2, canvas.height / 2 + 70);
+    }
+
+    // РИСУВАНЕ НА ИГРАЧА
     ctx.fillStyle = player.color;
-    // Rapid blink effect if invincible
     if (isInvincible && Math.floor(Date.now() / 100) % 2 === 0) {
         ctx.fillStyle = "transparent"; 
     }
     ctx.fillRect(player.x, player.y, player.size, player.size);
 
-    // Draw stalker
+    // РИСУВАНЕ НА СТАЛКЕРА
     ctx.fillStyle = "#ff3366"; 
     ctx.fillRect(stalker.x, stalker.y, stalker.size, stalker.size);
 
-    // Draw coins
+    // РИСУВАНЕ НА МОНЕТИТЕ
     coins.forEach(c => {
         ctx.fillStyle = "#ffcc00"; 
         ctx.beginPath();
@@ -248,6 +280,5 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-// Start drawing immediately
 draw();
-updateHearts(); // Ensure hearts are rendered initially
+updateHearts();
