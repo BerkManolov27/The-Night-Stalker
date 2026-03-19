@@ -51,9 +51,6 @@ body {
     font-size: 48px;
     margin-bottom: 25px;
     color: var(--neon-red);
-    text-shadow:
-        0 0 10px var(--neon-red),
-        0 0 20px var(--neon-red);
     letter-spacing: 2px;
 }
 
@@ -106,17 +103,84 @@ body {
     transform: translateY(-2px);
 }
 
-/* ================= RGB INPUTS ================= */
+.help-btn {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    padding: 10px 20px;
+}
 
-#colorMenu input {
-    width: 60px;
-    padding: 6px;
-    margin: 4px;
+.how-to-play {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto 16px;
+    padding: 14px 16px;
+    border: 1px solid rgba(0, 255, 255, 0.25);
+    border-radius: 12px;
+    background: rgba(7, 13, 22, 0.75);
+    text-align: left;
+}
+
+.how-to-play h3 {
+    margin: 0 0 10px;
+    color: var(--neon-cyan);
     font-size: 16px;
-    text-align: center;
-    border-radius: 6px;
-    border: none;
-    outline: none;
+}
+
+.how-to-play ul {
+    margin: 0;
+    padding-left: 18px;
+    color: #d3d9e2;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+/* ================= SKIN SELECTOR ================= */
+
+.skin-selector {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.skin-option {
+    width: 70px;
+    height: 70px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    cursor: pointer;
+    padding: 6px;
+    font-family: var(--font-main);
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d7d7d7;
+}
+
+.skin-option span {
+    font-size: 11px;
+    letter-spacing: 0.8px;
+}
+
+.skin-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+.skin-option:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.skin-option.selected {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 10px rgba(0, 255, 255, 0.15);
 }
 
 /* ================= GAME CONTAINER ================= */
@@ -158,6 +222,26 @@ body {
     font-size: 17px;
 }
 
+.music-toggle {
+    font-family: var(--font-main);
+    background: transparent;
+    color: #eee;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.music-toggle:hover {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.35);
+}
+
+.music-toggle.playing {
+    color: var(--neon-gold);
+    border-color: var(--neon-gold);
+    text-shadow: 0 0 8px var(--neon-gold);
+}
+
 .ui-badge .value {
     font-size: 18px;
     font-weight: 700;
@@ -196,6 +280,29 @@ canvas {
         linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
     border-radius: 12px;
+}
+
+/* ================= GAME OVER ================= */
+
+.game-over-title {
+    color: var(--neon-red) !important;
+    text-shadow:
+        0 0 10px var(--neon-red),
+        0 0 30px var(--neon-red),
+        0 0 60px var(--neon-red) !important;
+    animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.game-over-score {
+    font-size: 16px;
+    color: var(--neon-gold);
+    margin: 8px 0;
+    text-shadow: 0 0 8px var(--neon-gold);
 }
 
 /* ================= SMALL RESPONSIVE FIX ================= */

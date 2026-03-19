@@ -16,10 +16,31 @@
             <h1 class="sharp-title">FINGER STALKER</h1>
             <p class="menu-instructions">Evade the stalker. Collect the coins.</p>
             <p class="menu-subtext"><em>Control the player with your index finger via webcam</em></p>
-            
+
             <div class="menu-section">
-                <label>Select Player Color</label>
-                <input type="color" id="playerColorPicker" value="#00ffff">
+                <label>Select Skin</label>
+                <div class="skin-selector" id="skinSelector">
+                    <button class="skin-option selected" type="button" data-skin="default" title="Default Cube">
+                        <span>DEFAULT</span>
+                    </button>
+                    <button class="skin-option" type="button" data-skin="skin1" title="Skin 1">
+                        <img src="skins/skin1.png" alt="Skin 1">
+                    </button>
+                </div>
+            </div>
+
+            <button id="howToPlayBtn" class="neon-btn help-btn" type="button" aria-expanded="false">HOW TO PLAY</button>
+
+            <div id="howToPlayPanel" class="how-to-play" style="display:none;">
+                <h3>How To Play</h3>
+                <ul>
+                    <li>Press INITIALIZE GAME or press S to start.</li>
+                    <li>Move your index finger to control the player.</li>
+                    <li>Place your finger in the center circle to begin each level.</li>
+                    <li>Collect all coins and avoid the enemy.</li>
+                    <li>You have 3 hearts. Getting hit removes one heart.</li>
+                    <li>Press F to pause, R to restart, and M to toggle music.</li>
+                </ul>
             </div>
             
             <button id="playBtn" class="neon-btn">INITIALIZE GAME (Press S)</button>
@@ -41,6 +62,7 @@
             <div class="ui-badge">
                 HP: <div id="heartsContainer">❤️❤️❤️</div>
             </div>
+            <button id="musicToggleBtn" class="ui-badge music-toggle" type="button">MUSIC: OFF</button>
         </div>
 
         <div class="controls-hint">Press F to Pause | R to Restart</div>
