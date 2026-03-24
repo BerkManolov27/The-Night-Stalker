@@ -268,7 +268,7 @@ body {
     position: relative;
     display: inline-block;
     padding: 6px;
-    background: linear-gradient(45deg, var(--neon-cyan), var(--neon-gold));
+    background: #7fffd4;
     border-radius: 16px;
 }
 

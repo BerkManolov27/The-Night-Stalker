@@ -33,6 +33,10 @@ const maxLevels = 5;
 let hearts = 3;
 let isInvincible = false; 
 let selectedSkin = "default";
+let isWallStunned = false;
+let wallStunTimeoutId = null;
+
+let sfxContext = null;
 
 const skinImages = {
     skin1: new Image()
@@ -45,6 +49,61 @@ enemyImage.src = "skins/Enemy.webp";
 const backgroundMusic = new Audio("music/usefulpix-synthwave-retrowave-background-music-for-videos-345553.mp3");
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.35;
+
+function ensureSfxContext() {
+    if (!sfxContext) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return null;
+        sfxContext = new AudioContextClass();
+    }
+
+    if (sfxContext.state === "suspended") {
+        sfxContext.resume().catch(() => {
+            // Resume may fail before user gesture; ignore until next interaction.
+        });
+    }
+
+    return sfxContext;
+}
+
+function playTone({ frequency, duration, type = "sine", volume = 0.05, startTime }) {
+    const context = ensureSfxContext();
+    if (!context) return;
+
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+}
+
+function playCoinSfx() {
+    const context = ensureSfxContext();
+    if (!context) return;
+
+    const now = context.currentTime;
+    playTone({ frequency: 880, duration: 0.09, type: "triangle", volume: 0.06, startTime: now });
+    playTone({ frequency: 1320, duration: 0.11, type: "triangle", volume: 0.05, startTime: now + 0.07 });
+}
+
+function playHeartLossSfx() {
+    const context = ensureSfxContext();
+    if (!context) return;
+
+    const now = context.currentTime;
+    playTone({ frequency: 330, duration: 0.14, type: "sawtooth", volume: 0.07, startTime: now });
+    playTone({ frequency: 220, duration: 0.18, type: "sawtooth", volume: 0.06, startTime: now + 0.1 });
+}
 
 function updateMusicButton() {
     const isPlaying = !backgroundMusic.paused;
@@ -80,6 +139,8 @@ function toggleHowToPlay() {
 
 /* ================= MAIN MENU & START LOGIC ================= */
 function initializeGame() {
+    ensureSfxContext();
+
     if (!gameRunning && mainMenu.style.display !== "none") {
         mainMenu.style.display = "none";
         gameContainer.style.display = "block";
@@ -181,6 +242,11 @@ function startLevel() {
     stalker.speed = 1 + level * 0.5;
 
     isInvincible = false;
+    isWallStunned = false;
+    if (wallStunTimeoutId) {
+        clearTimeout(wallStunTimeoutId);
+        wallStunTimeoutId = null;
+    }
     levelNumberEl.innerText = level;
     coinCountEl.innerText = collectedCoins;
 
@@ -195,6 +261,23 @@ function restartGame() {
     gameRunning = false;
     waitingForStartMove = true; 
     statusText.innerText = "READY"; // Instruction removed from status
+}
+
+function applyWallStun() {
+    if (!gameRunning || waitingForStartMove || isWallStunned) return;
+
+    isWallStunned = true;
+    statusText.innerText = "STUNNED";
+
+    if (wallStunTimeoutId) clearTimeout(wallStunTimeoutId);
+    wallStunTimeoutId = setTimeout(() => {
+        isWallStunned = false;
+        wallStunTimeoutId = null;
+
+        if (gameRunning && !waitingForStartMove) {
+            statusText.innerText = "RUNNING";
+        }
+    }, 2000);
 }
 
 function spawnCoins() {
@@ -233,6 +316,7 @@ function checkCollision() {
 
     if (hit) {
         hearts--;
+        playHeartLossSfx();
         updateHearts();
 
         if (hearts <= 0) {
@@ -264,6 +348,7 @@ function checkCoins() {
         if (hit) {
             collectedCoins++;
             coinCountEl.innerText = collectedCoins;
+            playCoinSfx();
             return false;
         }
         return true;
@@ -294,12 +379,21 @@ function updateHearts() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const lerpFactor = 0.15; 
-    player.x += (playerTarget.x - player.x) * lerpFactor;
-    player.y += (playerTarget.y - player.y) * lerpFactor;
+    if (!isWallStunned) {
+        const lerpFactor = 0.15;
+        const nextX = player.x + (playerTarget.x - player.x) * lerpFactor;
+        const nextY = player.y + (playerTarget.y - player.y) * lerpFactor;
+        const maxX = canvas.width - player.size;
+        const maxY = canvas.height - player.size;
+        const touchedWall = nextX <= 0 || nextX >= maxX || nextY <= 0 || nextY >= maxY;
 
-    player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
-    player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
+        if (touchedWall) {
+            applyWallStun();
+        }
+
+        player.x = Math.max(0, Math.min(maxX, nextX));
+        player.y = Math.max(0, Math.min(maxY, nextY));
+    }
 
     // CIRCLE DRAWING (Kept on Canvas)
     if (waitingForStartMove) {
