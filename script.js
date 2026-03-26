@@ -129,6 +129,10 @@ const backgroundMusic = new Audio("music/usefulpix-synthwave-retrowave-backgroun
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.35;
 
+const coinCollectSound = new Audio("music/chieuk-coin-257878.mp3");
+coinCollectSound.preload = "auto";
+coinCollectSound.volume = 0.45;
+
 function ensureSfxContext() {
     if (!sfxContext) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -166,12 +170,17 @@ function playTone({ frequency, duration, type = "sine", volume = 0.05, startTime
 }
 
 function playCoinSfx() {
-    const context = ensureSfxContext();
-    if (!context) return;
+    const coinInstance = coinCollectSound.cloneNode();
+    coinInstance.volume = coinCollectSound.volume;
 
-    const now = context.currentTime;
-    playTone({ frequency: 880, duration: 0.09, type: "triangle", volume: 0.06, startTime: now });
-    playTone({ frequency: 1320, duration: 0.11, type: "triangle", volume: 0.05, startTime: now + 0.07 });
+    coinInstance.play().catch(() => {
+        const context = ensureSfxContext();
+        if (!context) return;
+
+        const now = context.currentTime;
+        playTone({ frequency: 880, duration: 0.09, type: "triangle", volume: 0.06, startTime: now });
+        playTone({ frequency: 1320, duration: 0.11, type: "triangle", volume: 0.05, startTime: now + 0.07 });
+    });
 }
 
 function playHeartLossSfx() {
