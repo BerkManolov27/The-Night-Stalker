@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Selection</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="menu-overlay">
+        <div class="menu-card skin-page-card">
+            <h1 class="sharp-title">SELECT SKIN</h1>
+            <p class="menu-subtext">All image files found in the skins folder will appear here.</p>
+
+            <div id="skinGrid" class="skin-page-grid"></div>
+            <div id="skinEmpty" class="skin-page-empty" style="display:none;">
+                No skin images found. Add PNG, JPG, WEBP, GIF, SVG, or AVIF files to the skins folder.
+            </div>
+
+            <div class="skin-page-actions">
+                <button id="defaultSkinBtn" class="neon-btn" type="button">USE DEFAULT CUBE</button>
+                <a href="index.html" class="neon-btn menu-link-btn">BACK TO GAME</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="skins-page.js"></script>
+</body>
+</html>

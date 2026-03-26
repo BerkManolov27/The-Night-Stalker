@@ -8,7 +8,6 @@ const heartsContainer = document.getElementById("heartsContainer");
 const howToPlayBtn = document.getElementById("howToPlayBtn");
 const howToPlayPanel = document.getElementById("howToPlayPanel");
 const musicToggleBtn = document.getElementById("musicToggleBtn");
-const skinOptions = document.querySelectorAll(".skin-option");
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -21,7 +20,7 @@ let waitingForStartMove = false;
 let player = { x: 400, y: 250, size: 28, color: "#00ffff" };
 let playerTarget = { x: 400, y: 250 }; 
 
-let stalker = { x: 50, y: 50, size: 40, speed: 1.2 };
+let stalker = { x: 50, y: 50, size: 56, speed: 1.2 };
 
 let coins = [];
 let collectedCoins = 0;
@@ -32,16 +31,96 @@ const maxLevels = 5;
 
 let hearts = 3;
 let isInvincible = false; 
-let selectedSkin = "default";
+let selectedSkinPath = localStorage.getItem("playerSkinPath") || "";
 let isWallStunned = false;
 let wallStunTimeoutId = null;
 
 let sfxContext = null;
 
-const skinImages = {
-    skin1: new Image()
-};
-skinImages.skin1.src = "skins/skin1.png";
+const playerSkinImage = new Image();
+let shouldUsePlayerSkin = false;
+let skinLoadPromise = Promise.resolve();
+
+function getSkinCandidates(path) {
+    if (!path) return [];
+
+    const lowerPath = path.toLowerCase();
+    const lastDot = path.lastIndexOf(".");
+    if (lastDot === -1) return [path];
+
+    const base = path.slice(0, lastDot);
+    if (lowerPath.endsWith(".af")) {
+        return [`${base}.png`, `${base}.webp`, `${base}.jpg`, `${base}.jpeg`, path];
+    }
+
+    return [path];
+}
+
+function loadSelectedSkin() {
+    selectedSkinPath = localStorage.getItem("playerSkinPath") || "";
+    shouldUsePlayerSkin = false;
+
+    if (!selectedSkinPath) {
+        skinLoadPromise = Promise.resolve();
+        return skinLoadPromise;
+    }
+
+    const candidates = getSkinCandidates(selectedSkinPath);
+
+    skinLoadPromise = new Promise((resolve) => {
+        const tryLoad = (index) => {
+            if (index >= candidates.length) {
+                shouldUsePlayerSkin = false;
+                selectedSkinPath = "";
+                localStorage.removeItem("playerSkinPath");
+                resolve();
+                return;
+            }
+
+            const candidatePath = candidates[index];
+            playerSkinImage.onload = () => {
+                shouldUsePlayerSkin = true;
+                selectedSkinPath = candidatePath;
+                localStorage.setItem("playerSkinPath", candidatePath);
+                resolve();
+            };
+            playerSkinImage.onerror = () => {
+                shouldUsePlayerSkin = false;
+                tryLoad(index + 1);
+            };
+            playerSkinImage.src = candidatePath;
+        };
+
+        tryLoad(0);
+    });
+
+    return skinLoadPromise;
+}
+
+function canDrawPlayerSkin() {
+    return (
+        shouldUsePlayerSkin &&
+        playerSkinImage.complete &&
+        playerSkinImage.naturalWidth > 0 &&
+        playerSkinImage.naturalHeight > 0
+    );
+}
+
+function drawSelectedSkinFallback(x, y, size, blinkFrame) {
+    const fallbackName = (selectedSkinPath.split("/").pop() || "SKIN").split(".")[0] || "SKIN";
+    const initials = fallbackName.slice(0, 2).toUpperCase();
+
+    ctx.fillStyle = blinkFrame ? "rgba(255, 255, 255, 0.25)" : "#26d8d8";
+    ctx.fillRect(x, y, size, size);
+
+    ctx.fillStyle = "#0a1320";
+    ctx.font = "bold 11px Orbitron";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(initials, x + size / 2, y + size / 2);
+}
+
+loadSelectedSkin();
 
 const enemyImage = new Image();
 enemyImage.src = "skins/Enemy.webp";
@@ -59,7 +138,6 @@ function ensureSfxContext() {
 
     if (sfxContext.state === "suspended") {
         sfxContext.resume().catch(() => {
-            // Resume may fail before user gesture; ignore until next interaction.
         });
     }
 
@@ -116,19 +194,11 @@ async function toggleMusic() {
         try {
             await backgroundMusic.play();
         } catch (error) {
-            // Browsers may block autoplay until a user gesture.
         }
     } else {
         backgroundMusic.pause();
     }
     updateMusicButton();
-}
-
-function setSelectedSkin(skinName) {
-    selectedSkin = skinName;
-    skinOptions.forEach(option => {
-        option.classList.toggle("selected", option.dataset.skin === skinName);
-    });
 }
 
 function toggleHowToPlay() {
@@ -144,21 +214,18 @@ function initializeGame() {
     if (!gameRunning && mainMenu.style.display !== "none") {
         mainMenu.style.display = "none";
         gameContainer.style.display = "block";
-        
-        startLevel();
-        gameRunning = false; 
-        waitingForStartMove = true; 
-        statusText.innerText = "READY"; // Cleaned status
+
+        loadSelectedSkin().then(() => {
+            startLevel();
+            gameRunning = false;
+            waitingForStartMove = true;
+            statusText.innerText = "READY";
+        });
     }
 }
 
 playBtn.addEventListener("click", initializeGame);
 howToPlayBtn.addEventListener("click", toggleHowToPlay);
-skinOptions.forEach(option => {
-    option.addEventListener("click", () => {
-        setSelectedSkin(option.dataset.skin);
-    });
-});
 
 /* ================= MEDIA PIPE HANDS ================= */
 const hands = new Hands({
@@ -238,7 +305,7 @@ function startLevel() {
 
     stalker.x = 50; 
     stalker.y = 50; 
-    stalker.size = 38 + level * 4;
+    stalker.size = 56 + level * 5;
     stalker.speed = 1 + level * 0.5;
 
     isInvincible = false;
@@ -257,10 +324,11 @@ function restartGame() {
     level = 1;
     hearts = 3;
     updateHearts();
+    loadSelectedSkin();
     startLevel();
     gameRunning = false;
     waitingForStartMove = true; 
-    statusText.innerText = "READY"; // Instruction removed from status
+    statusText.innerText = "READY";
 }
 
 function applyWallStun() {
@@ -363,7 +431,7 @@ function checkCoins() {
             startLevel();
             gameRunning = false;
             waitingForStartMove = true;
-            statusText.innerText = "LEVEL UP"; // Clean status
+            statusText.innerText = "LEVEL UP";
         }
     }
 }
@@ -395,7 +463,6 @@ function draw() {
         player.y = Math.max(0, Math.min(maxY, nextY));
     }
 
-    // CIRCLE DRAWING (Kept on Canvas)
     if (waitingForStartMove) {
         ctx.strokeStyle = player.color;
         ctx.lineWidth = 3;
@@ -409,20 +476,18 @@ function draw() {
         ctx.fillText("PLACE FINGER HERE TO START", canvas.width / 2, canvas.height / 2 + 80);
     }
 
-    // DRAW PLAYER
     const blinkFrame = isInvincible && Math.floor(Date.now() / 100) % 2 === 0;
-    const activeSkinImage = skinImages[selectedSkin];
-
-    if (selectedSkin !== "default" && activeSkinImage?.complete) {
+    if (canDrawPlayerSkin()) {
         if (!blinkFrame) {
-            ctx.drawImage(activeSkinImage, player.x, player.y, player.size, player.size);
+            ctx.drawImage(playerSkinImage, player.x, player.y, player.size, player.size);
         }
+    } else if (selectedSkinPath) {
+        drawSelectedSkinFallback(player.x, player.y, player.size, blinkFrame);
     } else {
         ctx.fillStyle = blinkFrame ? "rgba(255, 255, 255, 0.2)" : player.color;
         ctx.fillRect(player.x, player.y, player.size, player.size);
     }
 
-    // DRAW STALKER
     if (enemyImage.complete) {
         ctx.drawImage(enemyImage, stalker.x, stalker.y, stalker.size, stalker.size);
     } else {
@@ -430,7 +495,6 @@ function draw() {
         ctx.fillRect(stalker.x, stalker.y, stalker.size, stalker.size);
     }
 
-    // DRAW COINS
     coins.forEach(c => {
         ctx.fillStyle = "#ffcc00"; 
         ctx.beginPath();
