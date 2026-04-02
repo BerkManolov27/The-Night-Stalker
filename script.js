@@ -17,7 +17,7 @@ let gameRunning = false;
 let waitingForStartMove = false; 
 
 /* ================= PLAYER & STALKER ================= */
-let player = { x: 400, y: 250, size: 28, color: "#00ffff" };
+let player = { x: 400, y: 250, size: 34, color: "#00ffff" };
 let playerTarget = { x: 400, y: 250 }; 
 
 let stalker = { x: 50, y: 50, size: 56, speed: 1.2 };
@@ -363,7 +363,7 @@ function spawnCoins() {
         coins.push({
             x: 15 + Math.random() * (canvas.width - 30),
             y: 15 + Math.random() * (canvas.height - 30),
-            size: 15
+            size: 20
         });
     }
 }
