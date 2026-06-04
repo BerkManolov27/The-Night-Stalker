@@ -20,6 +20,62 @@ body {
     align-items: center;
 }
 
+/* Site header / logo */
+.site-header {
+    position: absolute;
+    top: 28px;
+    left: 36px;
+    z-index: 320;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: none; /* don't block clicks behind */
+}
+
+.site-header::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: -14px;
+    right: -14px;
+    bottom: -14px;
+    border-radius: 14px;
+    background: transparent;
+    box-shadow: 0 0 18px rgba(0,255,255,0.10), 0 0 36px rgba(128,0,255,0.06), 0 6px 24px rgba(0,0,0,0.6);
+    filter: blur(2px);
+    z-index: 315;
+    pointer-events: none;
+}
+
+#siteLogo {
+    width: 200px;
+    height: auto;
+    image-rendering: pixelated;
+    border-radius: 6px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.55), 0 0 12px rgba(0,255,255,0.08);
+    transform-origin: center;
+    transition: transform 220ms cubic-bezier(.2,.9,.2,1), filter 220ms ease, box-shadow 220ms ease;
+    animation: floatLogo 4s ease-in-out infinite;
+    position: relative;
+    z-index: 320;
+}
+
+/* tweak panel removed */
+
+#siteLogo:hover {
+    transform: translateY(-6px) rotate(-1deg) scale(1.04);
+    filter: drop-shadow(0 14px 28px rgba(0,255,255,0.12));
+}
+
+@keyframes floatLogo {
+    0% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-6px) rotate(-0.4deg); }
+    100% { transform: translateY(0) rotate(0); }
+}
+
 .menu-overlay {
     position: absolute;
     top: 0;
@@ -292,6 +348,22 @@ body {
     transition: all 0.25s ease;
 }
 
+.back-btn {
+    font-family: var(--font-main);
+    background: rgba(0,0,0,0.45);
+    color: #bfeff4;
+    border: 1px solid rgba(0,255,255,0.12);
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.back-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,255,255,0.06);
+}
+
 .music-toggle:hover {
     border-color: var(--neon-cyan);
     color: var(--neon-cyan);
@@ -377,5 +449,9 @@ canvas {
     .top-ui {
         flex-direction: column;
         align-items: center;
+    }
+
+    #siteLogo {
+        width: 140px;
     }
 }
